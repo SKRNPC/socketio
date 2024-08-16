@@ -1,23 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import "./App.css";
+import SocketIO from "socket.io-client";
+
+const socket = SocketIO("http://localhost:3001", {
+  transports: ["websocket", "polling", "flashsocket"],
+});
 
 function App() {
+  const [text, setText] = useState("");
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    socket.on("push_data", (response) => {
+      data.push(response.url);
+      setData([...data]);
+    });
+  }, [data]);
+
+  const sendData = () => {
+    if (text != "") {
+      socket.emit("send_data", {
+        url: text,
+      });
+      data.push(text);
+      setData([...data]);
+    } else {
+      alert("Link gir");
+    }
+  };
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div>
+        <input
+          value={text}
+          type="text"
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button onClick={sendData}>Veriyi gönder</button>
+      </div>
+
+      <div>
+        {data.map((item) => (
+          <div>
+            <a href={item} target="_blank" rel="noopener noreferrer">
+              {item}
+            </a>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
